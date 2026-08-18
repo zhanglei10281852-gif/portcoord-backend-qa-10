@@ -216,9 +216,12 @@ func (s *Service) Report(ctx context.Context, req ReportRequest) error {
 		return apperr.New(apperr.CodeForbidden,
 			fmt.Sprintf("task %s has no active executor", req.TaskID))
 	}
-	owner := req.ExecutorID
-	if owner == "" {
-		owner = t.ClaimedBy
+	// Enforce execution-lease ownership: only the executor that claimed the
+	// task may report its completion. A different executor must not be able to
+	// finalize a lease it does not own.
+	if t.ClaimedBy != req.ExecutorID {
+		return apperr.New(apperr.CodeForbidden,
+			fmt.Sprintf("task %s is owned by %s, not %s", req.TaskID, t.ClaimedBy, req.ExecutorID))
 	}
 	newStatus, err := s.sm.MustTransition(string(t.Status), string(domain.PTStatusCompleted))
 	if err != nil {
