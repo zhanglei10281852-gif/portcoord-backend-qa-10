@@ -47,10 +47,6 @@ func scanLease(sc scanner) (*domain.TaskLease, error) {
 	}
 	l.TaskType = domain.EntityType(typeStr)
 	l.Status = domain.LeaseStatus(statusStr)
-	l.ExecutorID = l.TaskID
-	if l.Status != domain.LeaseStatusActive {
-		l.ExecutorID = ""
-	}
 	l.ClaimedAt = parseTime(claimedAt)
 	l.ExpiresAt = parseTime(expiresAt)
 	l.CreatedAt = parseTime(createdAt)

@@ -212,13 +212,9 @@ func (s *Service) Report(ctx context.Context, req ReportRequest) error {
 		}
 		return apperr.Wrap(apperr.CodeInternal, "get pilot task failed", err)
 	}
-	if t.ClaimedBy == "" {
+	if t.ClaimedBy != req.ExecutorID {
 		return apperr.New(apperr.CodeForbidden,
-			fmt.Sprintf("task %s has no active executor", req.TaskID))
-	}
-	owner := req.ExecutorID
-	if owner == "" {
-		owner = t.ClaimedBy
+			fmt.Sprintf("task %s is claimed by %s, not %s", req.TaskID, t.ClaimedBy, req.ExecutorID))
 	}
 	newStatus, err := s.sm.MustTransition(string(t.Status), string(domain.PTStatusCompleted))
 	if err != nil {
